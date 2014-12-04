@@ -341,6 +341,10 @@ static void __exit sniffer_exit(void)
         nf_unregister_hook(&nf_hook_ops);
         memset(&nf_hook_ops, 0, sizeof(nf_hook_ops));
     }
+    if (nf_hook_out.hook) {
+        nf_unregister_hook(&nf_hook_out);
+        memset(&nf_hook_out, 0, sizeof(nf_hook_out));
+    }
     cdev_del(&sniffer_cdev);
     unregister_chrdev_region(sniffer_dev, sniffer_minor);
     remove_proc_entry("sniffer",NULL);
