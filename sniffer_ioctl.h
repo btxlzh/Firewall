@@ -58,9 +58,9 @@ struct zl_tcp {
     uint8_t data[0];
 };
 
-#define IOC_MAGIC       'p'
-#define FLOW_ENABLE     _IOW(IOC_MAGIC, 0x1, struct flow_entry)
-#define FLOW_DISABLE    _IOW(IOC_MAGIC, 0x2, struct flow_entry)
+#define _IOC_MAGIC       'p'
+#define FLOW_ENABLE     _IOW(_IOC_MAGIC, 0x1, struct flow_entry)
+#define FLOW_DISABLE    _IOW(_IOC_MAGIC, 0x2, struct flow_entry)
 
 #define _IOC_MAXNR   0x3
 

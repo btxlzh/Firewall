@@ -55,10 +55,12 @@ struct skb_list
 struct rule{
     int mode;
     uint32_t src_ip;
+    uint32_t src_ip_mark;
     int src_port;
     uint32_t dst_ip;
+    uint32_t dst_ip_mark;
     int dst_port;
-    int action;
+    int proto;
     struct list_head list;
 };
 static struct rule rules;
@@ -139,8 +141,8 @@ static long sniffer_fs_ioctl(struct file *file, unsigned int cmd, unsigned long 
         return -EFAULT;
 
     switch(cmd) {
-        case ENABLE:
-        case ENABLE:
+        case FLOW_ENABLE:
+        case FLOW_DISABLE:
             list_for_each_entry(r_t, &rules.list, list){
                 if(cmp(r_t,entry)){
                     r_t->mode = entry->mode;
@@ -173,7 +175,7 @@ static int sniffer_proc_read(struct seq_file *output, void *v){
     int id=0;
     seq_printf(output,"[command] [src_ip]       [src_port]  [dst_ip]       [dst_port] [ID]\n");
     list_for_each_entry(tmp, &rules.list, list){
-        if(tmp->mode==SNIFFER_FLOW_ENABLE)
+        if(tmp->mode==FLOW_ENABLE)
             seq_printf(output," enable");
         else 
             seq_printf(output," disable");
@@ -262,7 +264,7 @@ static unsigned int sniffer_nf_hook(unsigned int hook, struct sk_buff* skb,
         list_for_each_entry(r_t, &rules.list, list){
             if( (s_ip==r_t->src_ip || r_t->src_ip==0) &&  (d_ip==r_t->dst_ip || r_t->dst_ip==0) &&
                     (d_port==r_t->dst_port ||r_t->dst_port==0 ) && (s_port==r_t->src_port||r_t->src_port ==0) ){
-                if (r_t->mode==SNIFFER_FLOW_ENABLE){
+                if (r_t->mode==FLOW_ENABLE){
                     printk(KERN_DEBUG "Accepted TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
                     wake_up_interruptible(&r_que);
                     save_skb(skb);

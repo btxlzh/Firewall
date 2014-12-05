@@ -33,7 +33,8 @@ void usage()
 char* chdown(char * s)
 {
     int l = strlen(s);
-    for(int i = 0; i < l; i++){
+    int i;
+    for(i = 0; i < l; i++){
         if(s[i]>=97&&s[i]<=122)
             s[i]-=32;
     }
@@ -92,10 +93,10 @@ int main(int argc, char **argv)
             switch(option_index) {
             case 0:     // mode
                 if(strcmp(chdown(optarg),"enable")==0){
-                    e.mode=SNIFFER_FLOW_ENABLE;
+                    e.mode=FLOW_ENABLE;
                 }else 
                 if(strcmp(chdown(optarg),"disable")==0){
-                    e.mode=SNIFFER_FLOW_DISABLE;
+                    e.mode=FLOW_DISABLE;
                 }
                 break;
             case 1:     // src_ip
