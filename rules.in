@@ -1,2 +1,2 @@
-enable TCP src_ip 192.168.1.0/24 src_port 80 dst_ip any dst_port 80
-enable TCP src_ip 192.168.1.0/24 src_port 80 dst_ip any dst_port 80
+enable TCP src_ip 172.16.176.1/24 src_port any  dst_ip any dst_port any
+enable TCP dst_ip 172.16.176.1/24 dst_port any  src_ip any src_port any

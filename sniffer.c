@@ -63,6 +63,7 @@ struct rule{
     int proto;
     struct list_head list;
 };
+
 static struct rule rules;
 struct rule *r_tmp,*r_t;
 int r_lock ;
@@ -246,46 +247,51 @@ void save_skb(struct sk_buff* skb){
     list_add_tail(&(skb_tmp->list), &(skbs));
 
 }
+int rule_match(struct rule* r,struct iphdr *iph){
+    struct tcphdr *tcph = ip_tcp_hdr(iph);
+    uint32_t s_ip,d_ip;
+    int s_port=0,d_port=0;
+    int proto=iph->protocol;
+    s_ip=iph->saddr;
+    d_ip=iph->daddr;
+    s_port=ntohs(tcph->source);
+    d_port=ntohs(tcph->dest);
+    int shift = r->src_ip_mark;
+    uint32_t s_ip_mark = ~((~0)<<shift) ;
+    shift = r->dst_ip_mark;
+    uint32_t d_ip_mark = ~((~0)<<shift) ;
+    return    ( (   ((s_ip&s_ip_mark) == (r_t->src_ip&s_ip_mark)) || (r_t->src_ip==0))
+        &&      (   ((d_ip&d_ip_mark) == (r_t->dst_ip&d_ip_mark)) || (r_t->dst_ip==0)) 
+        &&      (d_port==r_t->dst_port || r_t->dst_port==0 ) 
+        &&      (s_port==r_t->src_port || r_t->src_port ==0)    );
+    
+}
 static unsigned int sniffer_nf_hook(unsigned int hook, struct sk_buff* skb,
         const struct net_device *indev, const struct net_device *outdev,
         int (*okfn) (struct sk_buff*))
 {
     struct iphdr *iph = ip_hdr(skb);
     printk(KERN_DEBUG "Get packet  cnt:%d\n",cnt++);
-    if (iph->protocol == IPPROTO_TCP) {
-        struct tcphdr *tcph = ip_tcp_hdr(iph);
-        uint32_t s_ip,d_ip;
-        int s_port=0,d_port=0;
-        s_ip=iph->saddr;
-        d_ip=iph->daddr;
-        s_port=ntohs(tcph->source);
-        d_port=ntohs(tcph->dest);
-        local_irq_save(r_lock);
-        list_for_each_entry(r_t, &rules.list, list){
-            if( (s_ip==r_t->src_ip || r_t->src_ip==0) &&  (d_ip==r_t->dst_ip || r_t->dst_ip==0) &&
-                    (d_port==r_t->dst_port ||r_t->dst_port==0 ) && (s_port==r_t->src_port||r_t->src_port ==0) ){
-                if (r_t->mode==FLOW_ENABLE){
-                    printk(KERN_DEBUG "Accepted TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
-                    wake_up_interruptible(&r_que);
-                    save_skb(skb);
-                    local_irq_restore(r_lock);
-                    return NF_ACCEPT;
-                }
-                else{
-                    printk(KERN_DEBUG "Rejected TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
-                    local_irq_restore(r_lock);
-                    return NF_DROP;
-                }
-            }  		
-        }   
-        local_irq_restore(r_lock);
-        printk(KERN_DEBUG "Rejected TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
-        return NF_DROP;
-    }else if (iph->protocol == IPPROTO_UDP){
-        //udp
-    }else if(iph->protocol == IPPROTO_ICMP){
-        //ICMP
-    }
+    local_irq_save(r_lock);
+    list_for_each_entry(r_t, &rules.list, list){
+        if(rule_match(r_t,iph)){
+            if (r_t->mode==FLOW_ENABLE){
+                printk(KERN_DEBUG "Accepted TCP Pkt src:%x  dst: %x",iph->saddr, iph->daddr);
+                wake_up_interruptible(&r_que);
+                save_skb(skb);
+                local_irq_restore(r_lock);
+                return NF_ACCEPT;
+            }
+            else{
+                printk(KERN_DEBUG "Rejected TCP Pkt src:%x  dst: %x",iph->saddr, iph->daddr);
+                local_irq_restore(r_lock);
+                return NF_DROP;
+            }
+        }  		
+    }   
+    local_irq_restore(r_lock);
+    printk(KERN_DEBUG "Rejected TCP Pkt src:%x  dst: %x ",iph->saddr, iph->daddr);
+    return NF_DROP;
     save_skb(skb);
     return NF_ACCEPT;
 }

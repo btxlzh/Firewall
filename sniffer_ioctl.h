@@ -65,9 +65,9 @@ struct zl_tcp {
 #define _IOC_MAXNR   0x3
 
 
-#define TCP     0x0
-#define UDP     0x1
-#define ICMP    0x2
+#define TCP     IPPROTO_TCP
+#define UDP     IPPROTO_UDP
+#define ICMP    IPPROTO_ICMP
 //functions
 void flow_entry_init(struct flow_entry* );
 int sniffer_send_command(struct flow_entry *);
