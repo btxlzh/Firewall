@@ -173,7 +173,7 @@ static int sniffer_proc_read(struct seq_file *output, void *v){
     struct rule* tmp;
     unsigned char ret[4];
     int id=0;
-    seq_printf(output,"[command] [src_ip]       [src_port]  [dst_ip]       [dst_port] [ID]\n");
+    seq_printf(output,"[command] [src_ip]          [src_port]  [dst_ip]          [dst_port] [ID]\n");
     list_for_each_entry(tmp, &rules.list, list){
         if(tmp->mode==FLOW_ENABLE)
             seq_printf(output," enable");
@@ -182,10 +182,10 @@ static int sniffer_proc_read(struct seq_file *output, void *v){
 
 
         if(tmp->src_ip==0)
-            seq_printf(output,"   any            ");
+            seq_printf(output,"   any               ");
         else {
             ip_rev(ret,tmp->src_ip);
-            seq_printf(output,"   %3d.%3d.%3d.%3d",ret[3],ret[2],ret[1],ret[0]);    
+            seq_printf(output,"   %3d.%3d.%3d.%3d/%d",ret[3],ret[2],ret[1],ret[0],tmp->src_ip_mark);    
         }
 
 
@@ -196,10 +196,10 @@ static int sniffer_proc_read(struct seq_file *output, void *v){
 
 
         if(tmp->dst_ip==0)
-            seq_printf(output,"     any            ");
+            seq_printf(output,"     any               ");
         else {
             ip_rev(ret,tmp->dst_ip);
-            seq_printf(output,"     %3d.%3d.%3d.%3d",ret[3],ret[2],ret[1],ret[0]); 
+            seq_printf(output,"     %3d.%3d.%3d.%3d/%d",ret[3],ret[2],ret[1],ret[0],tmp->dst_ip_mark); 
         }
 
 

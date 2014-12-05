@@ -68,5 +68,7 @@ struct zl_tcp {
 #define TCP     0x0
 #define UDP     0x1
 #define ICMP    0x2
-
+//functions
+void flow_entry_init(struct flow_entry* );
+int sniffer_send_command(struct flow_entry *);
 #endif /* __SNIFFER_IOCTL__ */
