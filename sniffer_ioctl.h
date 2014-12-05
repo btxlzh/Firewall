@@ -71,4 +71,26 @@ struct zl_tcp {
 //functions
 void flow_entry_init(struct flow_entry* );
 int sniffer_send_command(struct flow_entry *);
+//hashtable
+#ifndef _HASHTABLE_H
+#define _HASHTABLE_H
+
+typedef struct ht_key* ht_key;
+typedef struct ht_elem* ht_elem;
+typedef struct hash_table* ht;
+typedef struct ht_data* ht_data;
+ht ht_new (int init_size);
+void* ht_insert(ht H, ht_elem e);
+void ht_free(ht H);
+int ht_equal(ht_key k1,ht_key k2);
+u_int ht_hash(ht_elem);
+
+/* chains */
+typedef struct chain* chain;
+chain chain_new (int type);
+void* chain_insert(chain C, ht_elem e);
+void chain_free(chain C);
+
+
+#endif
 #endif /* __SNIFFER_IOCTL__ */

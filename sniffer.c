@@ -1,9 +1,3 @@
-/*
- * sniffer skeleton (Linux kernel module)
- *
- * Copyright (C) 2014 Ki Suh Lee <kslee@cs.cornell.edu>
- * based on netslice implementation of Tudor Marian <tudorm@cs.cornell.edu>
- */
 
 #include <linux/module.h>
 #include <linux/cdev.h>
@@ -30,7 +24,7 @@
 #include <linux/textsearch.h>
 
 MODULE_AUTHOR("");
-MODULE_DESCRIPTION("CS5413 Packet Filter / Sniffer Framework");
+MODULE_DESCRIPTION("CS5434 Packet Filter / Firewall");
 MODULE_LICENSE("Dual BSD/GPL");
 
 static dev_t sniffer_dev;
