@@ -127,9 +127,9 @@ static long sniffer_fs_ioctl(struct file *file, unsigned int cmd, unsigned long 
 {
     long err =0 ;
     struct flow_entry* entry=(struct flow_entry*) arg;
-    if (_IOC_TYPE(cmd) != SNIFFER_IOC_MAGIC)
+    if (_IOC_TYPE(cmd) != _IOC_MAGIC)
         return -ENOTTY; 
-    if (_IOC_NR(cmd) > SNIFFER_IOC_MAXNR)
+    if (_IOC_NR(cmd) > _IOC_MAXNR)
         return -ENOTTY;
     if (_IOC_DIR(cmd) & _IOC_READ)
         err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd));

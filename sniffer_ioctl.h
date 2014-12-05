@@ -62,7 +62,7 @@ struct zl_tcp {
 #define FLOW_ENABLE     _IOW(IOC_MAGIC, 0x1, struct flow_entry)
 #define FLOW_DISABLE    _IOW(IOC_MAGIC, 0x2, struct flow_entry)
 
-#define SNIFFER_IOC_MAXNR   0x3
+#define _IOC_MAXNR   0x3
 
 
 #define TCP     0x0
