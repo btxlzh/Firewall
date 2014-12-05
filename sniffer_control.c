@@ -118,24 +118,7 @@ int main(int argc, char **argv)
                 if(strcmp(optarg,"any")==0){
                     e.dst_ip=0;
                 }else 
-                /*if(strcmp(optarg,"localhost")==0){
-
-                    struct ifaddrs *addrs;
-                    getifaddrs(&addrs);
-                    struct ifaddrs *tmp = addrs;
-                    printf("tmp %d\n",tmp->ifa_addr);
-                    while (tmp) 
-                    {
-                        if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
-                        {
-                            struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
-                            printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
-                        }
-                        tmp = tmp->ifa_next;
-                    }
-
-                    freeifaddrs(addrs);
-                }else*/ {
+                {
                     if((host=gethostbyname(optarg))<=0){
                         printf("err\n");
                         return 0;

@@ -39,11 +39,11 @@ int print_packet(char * pkt, int len)
     char *dinfo = strdup(inet_ntoa(a));
     
     printf("%s:%d -> %s:%d",sinfo,sp,dinfo,dp);
-    
+    /*
     for(i = 0; i < len; ++i){
         if(i % 64 == 0)printf("\n");
         printf("%.2x ",(unsigned char)pkt[i]);
-    }
+    }*/
     printf("\n");
     free(sinfo);
     free(dinfo);
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     int fd=open(input_file,O_RDONLY);
     if(output_file) 
          freopen(output_file,"w",stdout);
-    char *buf = malloc(4096*sizeof(char));
+    char *buf = malloc(1000000*sizeof(char));
     printf("ready\n");
     int len=-1;
     while((len = read(fd,buf,0))>0){

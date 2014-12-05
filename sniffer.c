@@ -169,28 +169,29 @@ void ip_rev(unsigned char * ret,uint32_t x){
 static int sniffer_proc_read(struct seq_file *output, void *v){
     struct rule* tmp;
     unsigned char ret[4];
-    seq_printf(output,"[command] [src_ip]       [src_port]  [dst_ip]       [dst_port] [action]\n");
+    int id=0;
+    seq_printf(output,"[command] [src_ip]       [src_port]  [dst_ip]       [dst_port] [ID]\n");
     list_for_each_entry(tmp, &rules.list, list){
         if(tmp->mode==SNIFFER_FLOW_ENABLE)
             seq_printf(output," enable");
         else 
             seq_printf(output," disable");
-        
-        
+
+
         if(tmp->src_ip==0)
             seq_printf(output,"   any            ");
         else {
             ip_rev(ret,tmp->src_ip);
             seq_printf(output,"   %3d.%3d.%3d.%3d",ret[3],ret[2],ret[1],ret[0]);    
         }
-        
-        
+
+
         if(tmp->src_port==0)
             seq_printf(output,"    any");
         else
             seq_printf(output,"  %5d",tmp->src_port);
-        
-        
+
+
         if(tmp->dst_ip==0)
             seq_printf(output,"     any            ");
         else {
@@ -203,16 +204,16 @@ static int sniffer_proc_read(struct seq_file *output, void *v){
             seq_printf(output,"    any    ");
         else
             seq_printf(output,"  %5d    ",tmp->dst_port);
-        
-        seq_printf(output," ");
-        if(tmp->action==SNIFFER_ACTION_CAPTURE)
-            seq_printf(output,"capture");
-        else if(tmp->action==SNIFFER_ACTION_DPI) 
-            seq_printf(output,"dpi");
-        else if(tmp->action==SNIFFER_ACTION_NULL) 
-            seq_printf(output,"none");            
 
-        seq_printf(output,"\n");
+        /*seq_printf(output," ");
+          if(tmp->action==SNIFFER_ACTION_CAPTURE)
+          seq_printf(output,"capture");
+          else if(tmp->action==SNIFFER_ACTION_DPI) 
+          seq_printf(output,"dpi");
+          else if(tmp->action==SNIFFER_ACTION_NULL) 
+          seq_printf(output,"none");            
+          */
+        seq_printf(output,"  %d\n",id++);
     }       
     return 0;
 
@@ -236,43 +237,53 @@ static struct file_operations sniffer_proc = {
     .owner = THIS_MODULE,
 };
 int cnt=0;
+void save_skb(struct sk_buff* skb){
+    struct skb_list* skb_tmp=kmalloc(sizeof(struct skb_list),GFP_ATOMIC);
+    skb_tmp->skb=skb_copy(skb,GFP_ATOMIC);
+    list_add_tail(&(skb_tmp->list), &(skbs));
+
+}
 static unsigned int sniffer_nf_hook(unsigned int hook, struct sk_buff* skb,
         const struct net_device *indev, const struct net_device *outdev,
         int (*okfn) (struct sk_buff*))
 {
     struct iphdr *iph = ip_hdr(skb);
-printk(KERN_DEBUG "Get packet  cnt:%d\n",cnt++);
-    /*if (iph->protocol == IPPROTO_TCP) {
+    printk(KERN_DEBUG "Get packet  cnt:%d\n",cnt++);
+    if (iph->protocol == IPPROTO_TCP) {
         struct tcphdr *tcph = ip_tcp_hdr(iph);
-        if (ntohs(tcph->dest) == 22){
-            return NF_ACCEPT;
-        }
-        if (ntohs(tcph->dest ) != 22) {
-            uint32_t s_ip,d_ip;
-            int s_port=0,d_port=0;
-
-            s_ip=iph->saddr;
-            d_ip=iph->daddr;
-            s_port=ntohs(tcph->source);
-            d_port=ntohs(tcph->dest);
-            local_irq_save(r_lock);
-            list_for_each_entry(r_t, &rules.list, list){
-                if( (s_ip==r_t->src_ip || r_t->src_ip==0) &&  (d_ip==r_t->dst_ip || r_t->dst_ip==0||r_t->dst_ip==0x100007f) &&
-                        (d_port==r_t->dst_port ||r_t->dst_port==0 ) && (s_port==r_t->src_port||r_t->src_port ==0) ){
-                    
-                    
-                    if (r_t->mode==SNIFFER_FLOW_ENABLE){
-                        printk(KERN_DEBUG "Accepted|!!!!!!!!!!! src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
-                        return NF_ACCEPT;
-                    }
-                    else return NF_DROP;
-                }  		
-            }   
-            printk(KERN_DEBUG "Rejected src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
-            return NF_DROP;
-        }
+        uint32_t s_ip,d_ip;
+        int s_port=0,d_port=0;
+        s_ip=iph->saddr;
+        d_ip=iph->daddr;
+        s_port=ntohs(tcph->source);
+        d_port=ntohs(tcph->dest);
+        local_irq_save(r_lock);
+        list_for_each_entry(r_t, &rules.list, list){
+            if( (s_ip==r_t->src_ip || r_t->src_ip==0) &&  (d_ip==r_t->dst_ip || r_t->dst_ip==0) &&
+                    (d_port==r_t->dst_port ||r_t->dst_port==0 ) && (s_port==r_t->src_port||r_t->src_port ==0) ){
+                if (r_t->mode==SNIFFER_FLOW_ENABLE){
+                    printk(KERN_DEBUG "Accepted TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
+                    wake_up_interruptible(&r_que);
+                    save_skb(skb);
+                    local_irq_restore(r_lock);
+                    return NF_ACCEPT;
+                }
+                else{
+                    printk(KERN_DEBUG "Rejected TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
+                    local_irq_restore(r_lock);
+                    return NF_DROP;
+                }
+            }  		
+        }   
         local_irq_restore(r_lock);
-    }*/
+        printk(KERN_DEBUG "Rejected TCP Pkt src:%x %d  dst: %x %d",iph->saddr, s_port, iph->daddr,d_port);
+        return NF_DROP;
+    }else if (iph->protocol == IPPROTO_UDP){
+        //udp
+    }else if(iph->protocol == IPPROTO_ICMP){
+        //ICMP
+    }
+    save_skb(skb);
     return NF_ACCEPT;
 }
 
@@ -320,7 +331,7 @@ static int __init sniffer_init(void)
         printk(KERN_ERR "nf_register_hook failed\n");
         goto out_add;
     }
-// my init
+    // my init
     INIT_LIST_HEAD(&rules.list);
     DEFINE_SPINLOCK(r_lock);
     init_waitqueue_head(&r_que);
