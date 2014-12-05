@@ -1,13 +1,15 @@
 #ifndef __SNIFFER_IOCTL_
 #define __SNIFFER_IOCTL__
 
-struct sniffer_flow_entry {
+struct flow_entry {
     int mode;
     uint32_t src_ip;
+    uint32_t src_ip_mark;
     int src_port;
     uint32_t dst_ip;
+    uint32_t dst_ip_mark;
     int dst_port;
-    int action;
+    int proto; //0 = tcp; 1 = udp; 2 = icmp;
 };
 
 /* IP header */
@@ -56,16 +58,15 @@ struct zl_tcp {
     uint8_t data[0];
 };
 
-#define SNIFFER_IOC_MAGIC       'p'
-
-#define SNIFFER_FLOW_ENABLE     _IOW(SNIFFER_IOC_MAGIC, 0x1, struct sniffer_flow_entry)
-#define SNIFFER_FLOW_DISABLE    _IOW(SNIFFER_IOC_MAGIC, 0x2, struct sniffer_flow_entry)
+#define IOC_MAGIC       'p'
+#define FLOW_ENABLE     _IOW(IOC_MAGIC, 0x1, struct flow_entry)
+#define FLOW_DISABLE    _IOW(IOC_MAGIC, 0x2, struct flow_entry)
 
 #define SNIFFER_IOC_MAXNR   0x3
 
 
-#define SNIFFER_ACTION_NULL     0x0
-#define SNIFFER_ACTION_CAPTURE  0x1
-#define SNIFFER_ACTION_DPI      0x2
+#define TCP     0x0
+#define UDP     0x1
+#define ICMP    0x2
 
 #endif /* __SNIFFER_IOCTL__ */

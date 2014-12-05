@@ -119,14 +119,14 @@ static int sniffer_fs_release(struct inode *inode, struct file *file)
 {
     return 0;
 }
-int cmp(struct rule * l1,struct sniffer_flow_entry * l2){
+int cmp(struct rule * l1,struct flow_entry * l2){
     return (l1->src_ip==l2->src_ip) && (l1->src_port == l2->src_port) 
         && (l1->dst_ip==l2->dst_ip) && (l1->dst_port == l2->dst_port);
 }
 static long sniffer_fs_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     long err =0 ;
-    struct sniffer_flow_entry* entry=(struct sniffer_flow_entry*) arg;
+    struct flow_entry* entry=(struct flow_entry*) arg;
     if (_IOC_TYPE(cmd) != SNIFFER_IOC_MAGIC)
         return -ENOTTY; 
     if (_IOC_NR(cmd) > SNIFFER_IOC_MAXNR)
@@ -139,16 +139,17 @@ static long sniffer_fs_ioctl(struct file *file, unsigned int cmd, unsigned long 
         return -EFAULT;
 
     switch(cmd) {
-        case SNIFFER_FLOW_ENABLE:
-        case SNIFFER_FLOW_DISABLE:
+        case ENABLE:
+        case ENABLE:
             list_for_each_entry(r_t, &rules.list, list){
                 if(cmp(r_t,entry)){
                     r_t->mode = entry->mode;
-                    r_t->action = entry->action;
+                    r_t->proto = entry->proto;
+                    break;
                 }
             };
             r_tmp= vmalloc(sizeof(struct rule));
-            memcpy(r_tmp,entry,sizeof(struct sniffer_flow_entry));
+            memcpy(r_tmp,entry,sizeof(struct flow_entry));
             local_irq_save(r_lock);
             list_add(&(r_tmp->list), &(rules.list));
             local_irq_restore(r_lock);

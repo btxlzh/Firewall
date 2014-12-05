@@ -30,7 +30,17 @@ void usage()
     exit(EXIT_FAILURE);
 }
 
-int sniffer_send_command(struct sniffer_flow_entry *flow)
+char* chdown(char * s)
+{
+    int l = strlen(s);
+    for(int i = 0; i < l; i++){
+        if(s[i]>=97&&s[i]<=122)
+            s[i]-=32;
+    }
+    return s;
+}
+
+int sniffer_send_command(struct flow_entry *flow)
 {
     int fd;
     fd=open(dev_file,O_WRONLY);
@@ -41,20 +51,20 @@ int sniffer_send_command(struct sniffer_flow_entry *flow)
     ioctl(fd,flow->mode,flow);
     return 0;
 }
-void sniffer_flow_entry_init(struct sniffer_flow_entry* e){
+void flow_entry_init(struct flow_entry* e){
     e->src_ip=0;
     e->src_port=0;
     e->dst_ip=0;
-   e->dst_port=0;
-    e->mode= SNIFFER_FLOW_ENABLE;
-    e->action=0;
+    e->dst_port=0;
+    e->mode= FLOW_ENABLE;
+    e->proto=0;
 }
 int main(int argc, char **argv)
 {
     int c;
     program_name = argv[0];
-    struct sniffer_flow_entry e;
-    sniffer_flow_entry_init(&e);
+    struct flow_entry e;
+    flow_entry_init(&e);
     while(1) {
         static struct option long_options[] = 
         {
@@ -63,7 +73,7 @@ int main(int argc, char **argv)
             {"src_port", required_argument, 0, 0},
             {"dst_ip", required_argument, 0, 0},
             {"dst_port", required_argument, 0, 0},
-            {"action", required_argument, 0, 0},
+            {"p", required_argument, 0, 0},
             {"dev", required_argument, 0, 0},
             {0, 0, 0, 0}
         };
@@ -81,10 +91,10 @@ int main(int argc, char **argv)
 
             switch(option_index) {
             case 0:     // mode
-                if(strcmp(optarg,"enable")==0){
+                if(strcmp(chdown(optarg),"enable")==0){
                     e.mode=SNIFFER_FLOW_ENABLE;
                 }else 
-                if(strcmp(optarg,"disable")==0){
+                if(strcmp(chdown(optarg),"disable")==0){
                     e.mode=SNIFFER_FLOW_DISABLE;
                 }
                 break;
@@ -141,12 +151,12 @@ int main(int argc, char **argv)
                     e.dst_port=atoi(optarg);
                 break;
             case 5:     // action
-                if(strcmp(optarg,"null")==0)
-                    e.action=SNIFFER_ACTION_NULL;
-                else if(strcmp(optarg,"capture")==0)
-                    e.action=SNIFFER_ACTION_CAPTURE;
-                else if(strcmp(optarg,"dpi")==0)
-                    e.action=SNIFFER_ACTION_DPI;
+                if(strcmp(optarg,"ICMP")==0)
+                    e.proto=ICMP;
+                else if(strcmp(optarg,"UDP")==0)
+                    e.proto=UDP;
+                else if(strcmp(optarg,"TCP")==0)
+                    e.proto=TCP;
                 break;
             case 6:     // dev
                 dev_file=optarg;
