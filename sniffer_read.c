@@ -38,7 +38,7 @@ int print_packet(char * pkt, int len)
     a.s_addr=ip_h->ip_dst;
     char *dinfo = strdup(inet_ntoa(a));
     
-    printf("%s:%d -> %s:%d",sinfo,sp,dinfo,dp);
+    printf("proto %d ,%s:%d -> %s:%d",ip_h->ip_p,sinfo,sp,dinfo,dp);
     /*
     for(i = 0; i < len; ++i){
         if(i % 64 == 0)printf("\n");

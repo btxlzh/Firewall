@@ -87,10 +87,10 @@ u_int ht_hash(ht_elem);
 
 /* chains */
 typedef struct chain* chain;
-chain chain_new (int type);
+chain chain_new(void);
 void* chain_insert(chain C, ht_elem e);
 void chain_free(chain C);
 
-
-#endif
+#define  HASH_TABLE_SIZE 204800
+#endif // hash table
 #endif /* __SNIFFER_IOCTL__ */

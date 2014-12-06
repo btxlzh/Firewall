@@ -162,8 +162,8 @@ int sniffer_send_command(struct flow_entry *flow)
             "dst_ip_mark:%d\n"
             "dst_port:%d\n",flow->mode,flow->proto,flow->src_ip,flow->src_ip_mark,flow->src_port,flow->dst_ip,flow->dst_ip_mark,flow->dst_port);
     int shift = flow->src_ip_mark;
-    uint32_t mark =~((~0)<<shift) ;
-    printf("%x\n",mark);
+    uint32_t mark =((~0)<<(shift)) ;
+    printf("%x,%x\n",mark,~mark);
     int fd;
     fd=open(dev_file,O_WRONLY);
     if(fd<0){
@@ -181,7 +181,7 @@ void flow_entry_init(struct flow_entry* e){
     e->dst_port=0;
     e->dst_ip_mark=32;
     e->mode= FLOW_ENABLE;
-    e->proto=0;
+    e->proto=TCP;
 }
 int main(int argc, char **argv)
 {
